@@ -1,21 +1,33 @@
+import { useState, useEffect } from "react";
 
-mport { useState, useEffect } from "react";
-import { Card, CardContent } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
+// ✅ Componentes simples (reemplazan los imports que fallaban)
+const Card = ({ children }) => (
+  <div style={{ border: "1px solid #ccc", padding: 15, borderRadius: 10 }}>
+    {children}
+  </div>
+);
+
+const CardContent = ({ children }) => <div>{children}</div>;
+
+const Button = ({ children, onClick }) => (
+  <button 
+    onClick={onClick} 
+    style={{ padding: 10, marginTop: 10, cursor: "pointer" }}
+  >
+    {children}
+  </button>
+);
 
 // --- Simulación de base de datos con localStorage ---
 const USERS_KEY = "quiniela_users_v1";
-
 
 function loadUsers() {
   return JSON.parse(localStorage.getItem(USERS_KEY) || "[]");
 }
 
-
 function saveUsers(users) {
   localStorage.setItem(USERS_KEY, JSON.stringify(users));
 }
-
 
 export default function QuinielaApp() {
   const matches = [
@@ -26,21 +38,19 @@ export default function QuinielaApp() {
   ];
 
   const emptyPredictions = matches.map(m => ({ partido: m, user: "", real: "" }));
+
   const [username, setUsername] = useState("");
   const [logged, setLogged] = useState(false);
   const [data, setData] = useState(emptyPredictions);
   const [players, setPlayers] = useState([]);
 
-
   useEffect(() => {
     setPlayers(loadUsers());
   }, []);
 
-
   const handleLogin = () => {
     if (!username) return;
     setLogged(true);
-
 
     const users = loadUsers();
     if (!users.find(u => u.name === username)) {
@@ -50,7 +60,6 @@ export default function QuinielaApp() {
       setPlayers(updated);
     }
   };
-
 
   const handleChange = (index, field, value) => {
     const updated = [...data];
@@ -65,75 +74,68 @@ export default function QuinielaApp() {
       u.name === username ? { ...u, score } : u
     );
 
-
     saveUsers(users);
-    setPlayers(users.sort((a, b) => b.score - a.score));
+    setPlayers([...users].sort((a, b) => b.score - a.score));
   };
-
 
   if (!logged) {
     return (
-      <div className="p-6 text-center">
-        <h1 className="text-3xl font-bold">Quiniela Mundial 2026</h1>
+      <div style={{ padding: 20, textAlign: "center" }}>
+        <h1>Quiniela Mundial 2026</h1>
         <input
-          className="border p-2 rounded mt-4"
+          style={{ padding: 10, marginTop: 10 }}
           placeholder="Tu nombre"
           value={username}
           onChange={(e) => setUsername(e.target.value)}
         />
-        <div className="mt-4">
-          <Button onClick={handleLogin}>Entrar</Button>
-        </div>
+        <br />
+        <Button onClick={handleLogin}>Entrar</Button>
       </div>
     );
   }
 
-
   return (
-    <div className="p-6 grid gap-6">
-      <h1 className="text-3xl font-bold text-center">Quiniela Mundial 2026</h1>
+    <div style={{ padding: 20 }}>
+      <h1 style={{ textAlign: "center" }}>Quiniela Mundial 2026</h1>
 
-      {/* Quiniela */}
       <Card>
-        <CardContent className="p-4 grid gap-3">
+        <CardContent>
           {data.map((m, i) => (
-            <div key={i} className="grid md:grid-cols-4 gap-2">
-              <span>{m.partido}</span>
+            <div key={i} style={{ marginBottom: 10 }}>
+              <b>{m.partido}</b>
+              <br />
               <input
-                className="border p-2 rounded"
+                style={{ marginRight: 5 }}
                 placeholder="Tu ganador"
                 value={m.user}
                 onChange={(e) => handleChange(i, "user", e.target.value)}
               />
               <input
-                className="border p-2 rounded"
                 placeholder="Ganador real"
                 value={m.real}
                 onChange={(e) => handleChange(i, "real", e.target.value)}
               />
-              <span className="text-center">{m.user && m.user === m.real ? "✅" : "-"}</span>
+              <span style={{ marginLeft: 10 }}>
+                {m.user && m.user === m.real ? "✅" : "-"}
+              </span>
             </div>
           ))}
         </CardContent>
       </Card>
 
-      {/* Puntuación */}
       <Card>
-        <CardContent className="p-4 text-center">
-          <h2 className="font-bold">Tus puntos</h2>
-          <p className="text-2xl">{score}</p>
-          <Button className="mt-3" onClick={saveScore}>Guardar puntuación</Button>
+        <CardContent>
+          <h2>Tus puntos: {score}</h2>
+          <Button onClick={saveScore}>Guardar puntuación</Button>
         </CardContent>
       </Card>
 
-      {/* Ranking */}
       <Card>
-        <CardContent className="p-4">
-          <h2 className="text-xl font-bold text-center">🏆 Clasificación</h2>
-          {players.sort((a, b) => b.score - a.score).map((p, i) => (
-            <div key={i} className="flex justify-between border-b py-1">
-              <span>{i+1}. {p.name}</span>
-              <span>{p.score} pts</span>
+        <CardContent>
+          <h2>🏆 Clasificación</h2>
+          {players.map((p, i) => (
+            <div key={i}>
+              {i + 1}. {p.name} - {p.score} pts
             </div>
           ))}
         </CardContent>
@@ -141,24 +143,3 @@ export default function QuinielaApp() {
     </div>
   );
 }
-
-/*
-✅ CÓMO PUBLICAR (hosting en 2 min):
-
-1. Ve a https://vercel.com
-2. Importa este proyecto (o súbelo a GitHub)
-3. Framework: React
-4. Deploy
-
-👉 Tendrás un link tipo:
-https://quiniela-mundial.vercel.app
-
-Compártelo con tu oficina 🎉
-
-NOTA:
-Esto usa almacenamiento local (cada navegador).
-Si quieres versión PRO real con datos compartidos:
-- Firebase / Supabase (te lo configuro)
-- Login real
-- Ranking en vivo entre todos
-*/
